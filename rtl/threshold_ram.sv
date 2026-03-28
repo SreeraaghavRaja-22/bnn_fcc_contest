@@ -1,25 +1,26 @@
-module threshold_mem #(
-    parameter ADDR_WIDTH = 8, // 256 Neurons
-    parameter DATA_WIDTH = 16, // 16-bit precision
-    parameter RAM_STYLE = "distributed" 
+// ram for all the thresholds
+// also will enable to be synthesized in vivado
+
+module ram_sdp_vivado2 #(
+    parameter int DATA_WIDTH  = 16, 
+    parameter int ADDR_WIDTH  = 10, 
+    parameter bit REG_RD_DATA = 1'b0, 
+    parameter bit WRITE_FIRST = 1'b0, 
+    parameter string STYLE = ""
 )(
     input logic clk, 
-    input logic we, 
-    input logic [ ADDR_WIDTH-1:0] addr, 
-    input logic [ DATA_WIDTH-1:0] din, 
-    output logic [DATA_WIDTH-1:0] dout
+    input logic rd_en,
+    input logic [ADDR_WIDTH-1:0] rd_addr, 
+    input logic [DATA_WIDTH-1:0] rd_data, 
+    input logic wr_en, 
+    input logic [ADDR_WIDTH-1:0] wr_addr, 
+    input logic [DATA_WIDTH-1:0] wr_data
 );
 
-    // Build the memory in a specific style 
-    (* ram_style = RAM_STYLE *)
-    logic [DATA_WIDTH-1:0] mem [2**ADDR_WIDTH-1:0];
+    // Deals with vivado support for different ram styles
+    localparam int MAX_STYLE_LEN = 16; 
+    typedef logic [MAX_STYLE_LEN*8-1:0] string_as_logic_t;
+    localparam logic [MAX_STYLE_LEN*8-1:0] MEM_STYLE = string_as_logic_t'(STYLE);
 
-    // Sync Write / Asynchronous Read
-    always_ff @(posedge clk) begin
-        if (we) begin 
-            mem[addr] <= din;
-        end
-    end
-
-    assign dout = mem[addr];
-endmodule
+    // used packed logic array in the attribute
+    (* ram_style = MEM_STYLE *) logic [DATA_WIDTH-1:0] ram[2]
