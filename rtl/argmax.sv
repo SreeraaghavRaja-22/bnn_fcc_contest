@@ -12,7 +12,6 @@ module argmax #(
     output logic max_val
 ); 
 
-    // use the reduction operator to get the current_winner_inx
     logic last_in; 
     logic [NUM_OUTPUTS-1:0] big_ass_counter [COUNT_WIDTH-1];
     logic current_max_inx;
@@ -24,9 +23,8 @@ module argmax #(
             end 
         end else if (en) begin 
             for(int i = 0; i < NUM_INPUTS; i++) begin 
-                if
+                if (neuron_inputs[i]) big_ass_counter[i] <= big_ass_counter[i] + 1;
             end
-            big_ass_counter[current_winner_inx] <= big_ass_counter[current_winner_inx] + 1;
             if (last) last_in                   <= 1'b1;  
             if(last_in) begin 
                 for(int i = 0; i < COUNT_WIDTH; i++) begin 
