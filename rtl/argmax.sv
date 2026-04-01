@@ -19,7 +19,7 @@ module argmax #(
     logic current_max_inx;
 
     always_ff @(posedge clk or posedge rst) begin 
-        if (rst // || start of new counter) begin 
+        if (rst || last_in) begin 
             for(int i = 0; i < NUM_INPUTS; i++) begin 
                 big_ass_counter[i] <= COUNT_WIDTH'(0); 
             end 
@@ -40,6 +40,5 @@ module argmax #(
             if(big_ass_counter[current_max_inx]) current_max_inx = i;  > big_ass_counter[i];
         end 
     end 
-
     assign max_val = current_max_inx; 
 endmodule
