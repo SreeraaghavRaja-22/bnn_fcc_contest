@@ -1,43 +1,101 @@
-`timescale 1ns/100ps
+`timescale 1ns/1ps
 
 module argmax_tb;
 
-    localparam int NUM_TESTS;
-    localparam int COUNT_WIDTH = 32;
     localparam int NUM_OUTPUTS = 10;
-    logic clk = 1'b0;
+    localparam int COUNT_WIDTH = 32;
+
+    logic clk;
     logic rst;
     logic en;
     logic last;
     logic [NUM_OUTPUTS-1:0] neuron_inputs;
-    logic max_val;
+    logic [$clog2(NUM_OUTPUTS)-1:0] max_val;
 
-    // initialize the DUT
-    argmax (.NUM_TESTS(NUM_TESTS), .COUNT_WIDTH(COUNT_WIDTH)) dut (.*);
+    argmax #(
+        .NUM_OUTPUTS(NUM_OUTPUTS),
+        .COUNT_WIDTH(COUNT_WIDTH)
+    ) dut (
+        .clk(clk),
+        .rst(rst),
+        .en(en),
+        .last(last),
+        .neuron_inputs(neuron_inputs),
+        .max_val(max_val)
+    );
 
-    initial begin : generate_clk
-        forever #5 clk <= ~clk; 
-    end 
+    initial clk = 0;
+    always #5 clk = ~clk;
 
-    initial begin : generate_stim; 
-
-        // reset errything
-        rst     <= 1'b1; 
-        en      <= 1'b1; 
-        last    <= 1'b0;
-        repeat(10) @(posedge clk);
+    task automatic send_inputs(
+        input logic [NUM_OUTPUTS-1:0] inputs,
+        input logic last_flag
+    );
+    begin
         @(negedge clk);
-        rst <= 1'b0; 
+        neuron_inputs = inputs;
+        last          = last_flag;
+    end
+    endtask
+
+    initial begin
+        rst = 1;
+        en = 1;
+        last = 0;
+        neuron_inputs = '0;
+
+        repeat (2) @(posedge clk);
+        rst = 0;
+
+        // TEST 1
+        $display("TEST 1 starting...");
+        send_inputs(10'b0000001000, 0); // idx 3
+        send_inputs(10'b0000001010, 0); // idx 3,1
+        send_inputs(10'b0010001000, 0); // idx 7,3
+        send_inputs(10'b0000000010, 1); // idx 1 and last
+
         @(posedge clk);
+        @(posedge clk);
+        @(negedge clk);
 
-        $display("Test 1");
-        for(int i = 0; i < NUM_TESTS; i++) begin
-            neuron_inputs <= $urandom; 
-            
-        end
+        if (max_val == 3)
+            $display("TEST 1 PASS: max_val = %0d", max_val);
+        else
+            $error("TEST 1 FAIL: expected 3, got %0d", max_val);
 
+        // TEST 2
+        $display("TEST 2 starting...");
+        send_inputs(10'b0000000010, 0); // idx 1
+        send_inputs(10'b0000000010, 0); // idx 1
+        send_inputs(10'b0000010000, 0); // idx 4
+        send_inputs(10'b0000000010, 1); // idx 1 and last
 
+        @(posedge clk);
+        @(posedge clk);
+        @(negedge clk);
+
+        if (max_val == 1)
+            $display("TEST 2 PASS: max_val = %0d", max_val);
+        else
+            $error("TEST 2 FAIL: expected 1, got %0d", max_val);
+
+        // TEST 3
+        $display("TEST 3 starting...");
+        send_inputs(10'b0000100100, 0); // idx 5 and 2
+        send_inputs(10'b0000100000, 0); // idx 5
+        send_inputs(10'b0000000100, 1); // idx 2 and last
+
+        @(posedge clk);
+        @(posedge clk);
+        @(negedge clk);
+
+        if (max_val == 2)
+            $display("TEST 3 PASS: max_val = %0d", max_val);
+        else
+            $error("TEST 3 FAIL: expected 2, got %0d", max_val);
+
+        $display("All tests done.");
+        $finish;
     end
 
-
-
+endmodule

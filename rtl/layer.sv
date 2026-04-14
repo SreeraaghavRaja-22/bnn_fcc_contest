@@ -2,12 +2,11 @@ module layer #(
     parameter int BEAT_WIDTH = 16,
     parameter int NUM_INPUTS = 784,
     parameter int NUM_NEURONS = 256,
-    //parameter NUM_WEIGHTS = NUM_INPUTS,
     parameter int POPCOUNT_WIDTH = 32
-    //parameter int NUM_BEATS = $ceil(NUM_INPUTS / BEAT_WIDTH)
 )(
     input logic clk,
-    input logic [BEAT_WIDTH-1:0] x,
+    input logic [BEAT_WIDTH-1:0] x, // share for all neurons
+    input logic [NUM_NEURONS-1:0][POPCOUNT_WIDTH-1:0] thresholds,
     input logic rst, 
     input logic en, 
     input logic valid_in,
@@ -22,15 +21,14 @@ module layer #(
     generate
         for (genvar i = 0; i < NUM_NEURONS; i++) begin : neurons_loop
             neuron #(
-                .NUM_WEIGHTS(BEAT_WIDTH),
-                .NUM_INPUTS(BEAT_WIDTH), 
-                .THRESHOLD(3), // abritary for now
+                .BEAT_WIDTH(BEAT_WIDTH),
                 .POPCOUNT_WIDTH(POPCOUNT_WIDTH)
             ) N (
                 .clk(clk),
                 .rst(rst),
                 .en(en),
                 .valid_in(valid_in),
+                .threshold(thresholds[i]),
                 .last(last),
                 .w(w[i]),
                 .x(x),

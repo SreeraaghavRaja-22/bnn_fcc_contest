@@ -1,6 +1,6 @@
-Assumptions: assume that the 10 neuron outputs are packed into an array and are attached to the neuron input for this 
+//Assumptions: assume that the 10 neuron outputs are packed into an array and are attached to the neuron input for this 
 
-module argmax #(
+/*module argmax #(
     NUM_OUTPUTS = 10, 
     COUNT_WIDTH = 32
 )(
@@ -40,4 +40,66 @@ module argmax #(
         end 
     end 
     assign max_val = current_max_inx; 
+endmodule*/
+
+
+module argmax #(
+    parameter int NUM_OUTPUTS = 10,
+    parameter int COUNT_WIDTH = 32
+)(
+    input  logic clk,
+    input  logic rst,
+    input  logic en,
+    input  logic last,
+    input  logic [NUM_OUTPUTS-1:0] neuron_inputs,
+    output logic [$clog2(NUM_OUTPUTS)-1:0] max_val
+);
+
+    logic [COUNT_WIDTH-1:0] counters [NUM_OUTPUTS-1:0];
+    logic [$clog2(NUM_OUTPUTS)-1:0] current_max_idx;
+    logic last_in;
+
+    integer i;
+
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            last_in         <= 1'b0;
+            current_max_idx <= '0;
+            max_val         <= '0;
+            for (i = 0; i < NUM_OUTPUTS; i++) begin
+                counters[i] <= '0;
+            end
+        end
+        else if (en) begin
+            // accumulate counts until last arrives
+            if (!last_in) begin
+                for (i = 0; i < NUM_OUTPUTS; i++) begin
+                    if (neuron_inputs[i])
+                        counters[i] <= counters[i] + 1'b1;
+                end
+
+                if (last)
+                    last_in <= 1'b1;
+            end
+            else begin
+                // find argmax once after accumulation is done
+                current_max_idx = 0;
+                for (i = 1; i < NUM_OUTPUTS; i++) begin
+                    if (counters[i] > counters[current_max_idx])
+                        current_max_idx = i;
+                end
+
+                max_val <= current_max_idx;
+
+                // clear for next sample
+                for (i = 0; i < NUM_OUTPUTS; i++) begin
+                    counters[i] <= '0;
+                end
+                last_in <= 1'b0;
+            end
+        end
+    end
+
 endmodule
+
+
