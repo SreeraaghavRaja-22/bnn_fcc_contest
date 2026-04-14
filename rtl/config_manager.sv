@@ -36,7 +36,6 @@ module config_manager
             got_header_r   <= 1'b0;
         end else if (config_valid && config_ready && !got_header_r) begin
             header_r[beat_counter_r*BUS_WIDTH +: BUS_WIDTH] <= config_data;
-
             if (beat_counter_r == HEADER_BEATS-1) begin
                 beat_counter_r <= '0;
                 got_header_r   <= 1'b1;
