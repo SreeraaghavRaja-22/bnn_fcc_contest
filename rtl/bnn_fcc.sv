@@ -41,4 +41,5 @@ module bnn_fcc #(
         data_in_ready = 1'b1;
     end
 
+    
 endmodule

@@ -80,10 +80,8 @@
 // endmodule
 
 module neuron #(
-    parameter NUM_WEIGHTS = 4,
-    parameter NUM_INPUTS = 4, 
-    parameter int THRESHOLD = 4,
-    parameter int POPCOUNT_WIDTH = 32
+    parameter int POPCOUNT_WIDTH = 32,
+    parameter int BEAT_WIDTH = 4
 )
 (
     input logic clk, 
@@ -91,15 +89,16 @@ module neuron #(
     input logic en, 
     input logic valid_in,
     input logic last,
-    input logic [NUM_WEIGHTS-1:0] w,
-    input logic [NUM_INPUTS-1:0] x,
+    input logic [BEAT_WIDTH-1:0] w,
+    input logic [BEAT_WIDTH-1:0] x,
+    input logic [POPCOUNT_WIDTH-1:0] threshold,
     output logic y,
     output logic [POPCOUNT_WIDTH-1:0] popcount_out,
     output logic valid_out
 );
 
     // Pipeline Registers
-    logic [$clog2(NUM_WEIGHTS+1)-1:0] count_ones_out_r;
+    logic [$clog2(BEAT_WIDTH+1)-1:0] count_ones_out_r;
     logic [POPCOUNT_WIDTH-1:0] accum_r;
     logic [POPCOUNT_WIDTH-1:0] accum_next;
     logic [POPCOUNT_WIDTH-1:0] popcount_out_r;
@@ -134,7 +133,7 @@ module neuron #(
 
             /* Stage 2 */
             if(last_r1 && valid_r1) begin
-                y_r     <= (accum_next >= THRESHOLD);
+                y_r     <= (accum_next >= threshold);
                 valid_out_r <= 1'b1;
                 accum_r <= '0;
                 popcount_out_r <= accum_next;
