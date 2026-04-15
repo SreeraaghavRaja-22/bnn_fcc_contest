@@ -11,7 +11,7 @@ module ram_sdp_vivado2 #(
     input logic clk, 
     input logic rd_en,
     input logic [ADDR_WIDTH-1:0] rd_addr, 
-    input logic [DATA_WIDTH-1:0] rd_data, 
+    output logic [DATA_WIDTH-1:0] rd_data, 
     input logic wr_en, 
     input logic [ADDR_WIDTH-1:0] wr_addr, 
     input logic [DATA_WIDTH-1:0] wr_data
@@ -23,7 +23,7 @@ module ram_sdp_vivado2 #(
     localparam logic [MAX_STYLE_LEN*8-1:0] MEM_STYLE = string_as_logic_t'(STYLE);
 
     // used packed logic array in the attribute
-    (* ram_style = MEM_STYLE *) logic [DATA_WIDTH-1:0] ram[2**ADDR_WIDTH]
+    (* ram_style = MEM_STYLE *) logic [DATA_WIDTH-1:0] ram[2**ADDR_WIDTH];
     logic [DATA_WIDTH-1:0] rd_data_ram; 
 
     always_ff @(posedge clk) begin 
